@@ -1,3 +1,6 @@
+### multivariate outliers detection based one paper, 
+### link: https://www.sciencedirect.com/science/article/pii/S0022103117302123
+###############################################################################
 library(MASS)
   datapath='D:/fMRI_data/Rscripts/data'
   setwd(datapath)
