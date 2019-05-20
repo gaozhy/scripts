@@ -135,10 +135,10 @@ for iSub=1:length(subs)
                         medst_l2_bt_tmp=w2b_struc_t(medst_l2_c,medst_l2_r);
                         medst_l3_bt_tmp=w2b_struc_t(medst_l3_c,medst_l3_r);                       
                         
-                        weak_no_bb_tmp=w2b_struc_b(weak_no_c,weak_no_r);
-                        medst_l1_bb_tmp=w2b_struc_b(medst_l1_c,medst_l1_r);
-                        medst_l2_bb_tmp=w2b_struc_b(medst_l2_c,medst_l2_r);
-                        medst_l3_bb_tmp=w2b_struc_b(medst_l3_c,medst_l3_r); 
+                        weak_no_bb_tmp=biased_beh_struc(weak_no_c,weak_no_r);
+                        medst_l1_bb_tmp=biased_beh_struc(medst_l1_c,medst_l1_r);
+                        medst_l2_bb_tmp=biased_beh_struc(medst_l2_c,medst_l2_r);
+                        medst_l3_bb_tmp=biased_beh_struc(medst_l3_c,medst_l3_r); 
                         
                         weak_nop=[weak_nop;weak_nop_tmp];
                         weak_not=[weak_not;weak_not_tmp];
