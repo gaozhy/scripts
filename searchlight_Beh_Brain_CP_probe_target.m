@@ -33,7 +33,7 @@ for iSub=1:length(subs)
     
     load(sprintf('%s/beh_results/sem/sub%02d_alldata.mat',basedir,sub_current));
     
-    weak_no=alldata.KeyPress==2&allwb(:,4)==1;
+
     
     
     
@@ -48,7 +48,7 @@ for iSub=1:length(subs)
     all_tdata=shiftdim(all_tdata,3);
     
 
-    allsta=zeros(xlength,ylength,zlength,7);
+    allsta=zeros(xlength,ylength,zlength,24);
     
     
     
