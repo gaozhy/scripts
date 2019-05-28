@@ -32,26 +32,30 @@ for iSub=1:length(subs)
     
     load(sprintf('%s/beh_results/sem/sub%02d_alldata.mat',basedir,sub_current));
     
-    load(sprintf('%/roiAct/sem/sub%02_controlAct.mat',basedir,sub_current));
-    
-    
+    ifg=[];pmtg=[];rpmtg=[];
+    for run=1:4
+        ifg_tmp=load(sprintf('%/mps/stand/roiTP/sub%02_control_ifg_run%d_timepoints.txt',basedir,sub_current));
+        pmtg_tmp=load(sprintf('%/mps/stand/roiTP/sub%02_control_pmtg_run%d_timepoints.txt',basedir,sub_current));
+        rpmtg_tmp=load(sprintf('%/mps/stand/roiTP/sub%02_pmtg_seman_run%d_timepoints.txt',basedir,sub_current));
+        ifg=[ifg;ifg_tmp];
+        pmtg=[pmtg;pmtg_tmp];
+        rpmtg=[rpmtg;rpmtg_tmp];
+    end
+    scact=[ifg pmtg rpmtg];
     
     
     filename_ps = sprintf('%s/mps/ptRSA/tgroup/sub%02d_allrsa.nii.gz',basedir,sub_current);
     allrsa=niftiread(filename_ps);
     
-    filename_std = sprintf('%s/mps/ptRSA/tgroup/sub%02d_allact.nii.gz',basedir,sub_current);
-    allact=niftiread(filename_std);
-    
-    filename_std = sprintf('%s/mps/ptRSA/tgroup/sub%02d_allstd.nii.gz',basedir,sub_current);
-    allstd=niftiread(filename_std);
+    filename_act = sprintf('%s/mps/ptRSA/tgroup/sub%02d_allact.nii.gz',basedir,sub_current);
+    allact=niftiread(filename_act);
     
     
     allrsa=shiftdim(allrsa,3);
     allact=shiftdim(allact,3);
-    allstd=shiftdim(allstd,3);
 
-    allsta=zeros(xlength,ylength,zlength,7);
+
+    allsta=zeros(xlength,ylength,zlength,9);
     
     
     
@@ -61,51 +65,29 @@ for iSub=1:length(subs)
                 
                 cubic_p       = allrsa(:,k-radius:k+radius,j-radius:j+radius,i-radius:i+radius); % define small cubic
                 cubicvector_p = cubic_p(:,:);
-                cubic1=mean(cubicvector_p);
-                tmp1=cubicvector_p';
+                mps=mean(cubicvector_p');
                 
-                cubic_t       = allact(:,k-radius:k+radius,j-radius:j+radius,i-radius:i+radius); % define small cubic
-                cubicvector_t = cubic_t(:,:);
-                cubic2=mean(cubicvector_t);
-                tmp2=cubicvector_t';
+                cubic_a       = allact(:,k-radius:k+radius,j-radius:j+radius,i-radius:i+radius); % define small cubic
+                cubicvector_a = cubic_a(:,:);
+                mact=mean(cubicvector_a');
                 
-                cubic_d       = allstd(:,k-radius:k+radius,j-radius:j+radius,i-radius:i+radius); % define small cubic
-                cubicvector_d = cubic_d(:,:);
-                cubic3=mean(cubicvector_d);
-                tmp3=cubicvector_d';
                                 
                 
-                if min(std(cubicvector_p,0,2))<epsilon || min(std(cubicvector_t,0,2))<epsilon 
-
+                if min(std(cubicvector_p,0,2))<epsilon || min(std(cubicvector_a,0,2))<epsilon
                     
                     allsta(k,j,i,:)=10;
                     
                 else
-                    cc=diag(corr(cubicvector_p',cubicvector_t'));
-                    z_cc=0.5*(log(1+cc)-log(1-cc));
                     
                     
-    
-                    act=mean(tmp1+tmp2)/2;act=act';%std=nanmean(nanstd(tmp1)+nanstd(tmp2))/2;
-                    allstd(k,j,i,:)=nanmean(nanstd(tmp1)+nanstd(tmp2))/2;
-                    
-                    corr_y=partialcorr(z_cc(alldata.KeyPress==1),allwb(alldata.KeyPress==1),act(alldata.KeyPress==1));
-                    corr_n=partialcorr(z_cc(alldata.KeyPress==2),allwb(alldata.KeyPress==2),act(alldata.KeyPress==2));
-                    corr_a=partialcorr(z_cc,allwb(:,3),act);
-                    
-                    zcorr_y=0.5*(log(1+corr_y)-log(1-corr_y));
-                    zcorr_n=0.5*(log(1+corr_n)-log(1-corr_n));
-                    zcorr_a=0.5*(log(1+corr_a)-log(1-corr_a));
+                    for r=1:3
+                        allsta(k,j,i,(r-1)*3+1)=partialcorr(mps(alldata.KeyPress==1),scact(alldata.KeyPress==1,r),mact(alldata.KeyPress==1));
+                        allsta(k,j,i,(r-1)*3+2)=partialcorr(mps(alldata.KeyPress==2),scact(alldata.KeyPress==2,r),mact(alldata.KeyPress==2));
+                        allsta(k,j,i,(r-1)*+3)=partialcorr(mps,scact(:,r),mact);
+                    end
                     
                     
                     
-                    allsta(k,j,i,1)=mean(z_cc(alldata.KeyPress==1));
-                    allsta(k,j,i,2)=mean(z_cc(alldata.KeyPress==2));
-                    allsta(k,j,i,3)=mean(z_cc(alldata.KeyPress==1))-mean(z_cc(alldata.KeyPress==2));
-                    allsta(k,j,i,4)=zcorr_a;
-                    allsta(k,j,i,5)=zcorr_y;
-                    allsta(k,j,i,6)=zcorr_n;
-                    allsta(k,j,i,7)=zcorr_y-zcorr_n;
                     
                     
                     
@@ -114,26 +96,13 @@ for iSub=1:length(subs)
         end % end
     end
     
-    label={'ps_y','ps_n','ps_ymn','corr_a','corr_y','corr_n','corr_ymn'};
+    label={'control_ifg_y','control_ifg_n','control_ifg_a','pmtg_y','pmtg_n','pmtg_a','control_pmtg_y','control_pmtg_n','control_pmtg_a'};
     for l=1:length(label)
-        filename=sprintf('%s/mps/ptRSA/ptgroup/sub%02d_%s.nii',basedir,sub_current,label{l});
+        filename=sprintf('%s/mps/controlPS/tgroup/sub%02d_%s.nii',basedir,sub_current,label{l});
         
         data=squeeze(allrsa(:,:,:,l));
         niftiwrite(data,filename)
         system(sprintf('gzip -f %s',filename));
     end
-    filename1=sprintf('%s/mps/ptRSA/ptgroup/sub%02d_allrsa.nii',basedir,sub_current);
-    niftiwrite(allrsa,filename1);
-    system(sprintf('gzip -f %s',filename1));
-    
-    filename2=sprintf('%s/mps/ptRSA/ptgroup/sub%02d_allact.nii',basedir,sub_current);
-    niftiwrite(allact,filename2);
-    system(sprintf('gzip -f %s',filename2));
-    
-    filename3=sprintf('%s/mps/ptRSA/ptgroup/sub%02d_allstd.nii',basedir,sub_current);
-    niftiwrite(allstd,filename3);
-    system(sprintf('gzip -f %s',filename3));
-    
-    time=toc/3600;
 end
 end
